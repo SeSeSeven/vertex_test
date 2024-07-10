@@ -1,0 +1,4 @@
+torch == 2.3.0+cu121
+matplotlib ==3.7.1
+click == 8.1.7
+google-cloud-storage
