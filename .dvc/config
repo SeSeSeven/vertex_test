@@ -1,0 +1,4 @@
+[core]
+    remote = corruptmnist_remote
+['remote "corruptmnist_remote"']
+    url = gs://my_lmu_mlops_data_bucket/data/corruptmnist
