@@ -4,8 +4,7 @@ steps:
     args:
       - '-c'
       - |
-        git clone https://$(GITHUB_TOKEN)@github.com/SeSeSeven/vertex_test.git .
-    secretEnv: ['GITHUB_TOKEN']
+        git clone https://github.com/SeSeSeven/vertex_test.git .
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/dtumlops/mnist-training-image:$COMMIT_SHA', '.']
@@ -15,11 +14,6 @@ steps:
 
 images:
   - 'gcr.io/dtumlops/mnist-training-image:$COMMIT_SHA'
-
-secrets:
-- kmsKeyName: projects/dtumlops/locations/global/keyRings/my-keyring/cryptoKeys/my-key
-  secretEnv:
-    GITHUB_TOKEN: projects/dtumlops/secrets/github-token/versions/latest
 
 options:
   logging: CLOUD_LOGGING_ONLY
