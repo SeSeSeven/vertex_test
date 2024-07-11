@@ -4,10 +4,12 @@ steps:
     args:
       - '-c'
       - |
+        mkdir code
+        cd code
         git clone https://github.com/SeSeSeven/vertex_test.git .
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/dtumlops/mnist-training-image:$COMMIT_SHA', '.']
+    args: ['build', '-t', 'gcr.io/dtumlops/mnist-training-image:$COMMIT_SHA', './code']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/dtumlops/mnist-training-image:$COMMIT_SHA']
