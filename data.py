@@ -1,23 +1,20 @@
 from typing import Tuple
-
 import matplotlib.pyplot as plt  # only needed for plotting
 import torch
 from mpl_toolkits.axes_grid1 import ImageGrid  # only needed for plotting
+import os
 
-DATA_PATH = "data/corruptmnist"
-
-
-def corrupt_mnist() -> Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset]:
+def corrupt_mnist(data_path: str) -> Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset]:
     """Return train and test dataloaders for corrupt MNIST."""
     train_images, train_target = [], []
     for i in range(5):
-        train_images.append(torch.load(f"{DATA_PATH}/train_images_{i}.pt"))
-        train_target.append(torch.load(f"{DATA_PATH}/train_target_{i}.pt"))
+        train_images.append(torch.load(os.path.join(data_path, f"train_images_{i}.pt")))
+        train_target.append(torch.load(os.path.join(data_path, f"train_target_{i}.pt")))
     train_images = torch.cat(train_images)
     train_target = torch.cat(train_target)
 
-    test_images = torch.load(f"{DATA_PATH}/test_images.pt")
-    test_target = torch.load(f"{DATA_PATH}/test_target.pt")
+    test_images = torch.load(os.path.join(data_path, "test_images.pt"))
+    test_target = torch.load(os.path.join(data_path, "test_target.pt"))
 
     train_images = train_images.unsqueeze(1).float()
     test_images = test_images.unsqueeze(1).float()
@@ -28,7 +25,6 @@ def corrupt_mnist() -> Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset]
     test_set = torch.utils.data.TensorDataset(test_images, test_target)
 
     return train_set, test_set
-
 
 def show_image_and_target(images: torch.Tensor, target: torch.Tensor) -> None:
     """Plot images and their labels in a grid."""
@@ -41,9 +37,9 @@ def show_image_and_target(images: torch.Tensor, target: torch.Tensor) -> None:
         ax.axis("off")
     plt.show()
 
-
 if __name__ == "__main__":
-    train_set, test_set = corrupt_mnist()
+    data_path = "/gcs/my_lmu_mlops_data_bucket/data/corruptmnist"
+    train_set, test_set = corrupt_mnist(data_path)
     print(f"Size of training set: {len(train_set)}")
     print(f"Size of test set: {len(test_set)}")
     print(f"Shape of a training point {(train_set[0][0].shape, train_set[0][1].shape)}")

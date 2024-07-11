@@ -3,34 +3,30 @@ import matplotlib.pyplot as plt
 import torch
 from model import MyAwesomeModel
 from data import corrupt_mnist
-from google.cloud import storage
+import os
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-
-def upload_to_gcs(bucket_name, source_file_name, destination_blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(destination_blob_name)
-    blob.upload_from_filename(source_file_name)
 
 @click.group()
 def cli():
     """Command line interface."""
     pass
 
-
 @click.command()
 @click.option("--lr", default=1e-3, help="learning rate to use for training")
 @click.option("--batch_size", default=32, help="batch size to use for training")
 @click.option("--epochs", default=10, help="number of epochs to train for")
-@click.option("--bucket_name", help="Google Cloud Storage bucket name to save the files")
+@click.option("--bucket_name", required=True, help="Google Cloud Storage bucket name to save the files")
 def train(lr, batch_size, epochs, bucket_name) -> None:
     """Train a model on MNIST."""
     print("Training day and night")
     print(f"{lr=}, {batch_size=}, {epochs=}")
 
+    # 使用挂载的GCS路径
+    gcs_path = f"/gcs/{bucket_name}/data/corruptmnist"
+    train_set, _ = corrupt_mnist(gcs_path)
+
     model = MyAwesomeModel().to(DEVICE)
-    train_set, _ = corrupt_mnist()
 
     train_dataloader = torch.utils.data.DataLoader(train_set, batch_size=batch_size)
 
@@ -56,30 +52,35 @@ def train(lr, batch_size, epochs, bucket_name) -> None:
                 print(f"Epoch {epoch}, iter {i}, loss: {loss.item()}")
 
     print("Training complete")
-    torch.save(model.state_dict(), "trained_model.pt")
+    model_save_path = f"/gcs/{bucket_name}/trained_model.pt"
+    torch.save(model.state_dict(), model_save_path)
+
     fig, axs = plt.subplots(1, 2, figsize=(15, 5))
     axs[0].plot(statistics["train_loss"])
     axs[0].set_title("Train loss")
     axs[1].plot(statistics["train_accuracy"])
     axs[1].set_title("Train accuracy")
-    fig.savefig("training_statistics.png")
-
-    # Upload files to GCS
-    if bucket_name:
-        upload_to_gcs(bucket_name, "trained_model.pt", "trained_model.pt")
-        upload_to_gcs(bucket_name, "training_statistics.png", "training_statistics.png")
+    
+    fig_save_path = f"/gcs/{bucket_name}/training_statistics.png"
+    fig.savefig(fig_save_path)
 
 @click.command()
 @click.argument("model_checkpoint")
-def evaluate(model_checkpoint) -> None:
+@click.option("--bucket_name", required=True, help="Google Cloud Storage bucket name to load the files")
+def evaluate(model_checkpoint, bucket_name) -> None:
     """Evaluate a trained model."""
     print("Evaluating like my life depended on it")
     print(model_checkpoint)
 
+    # 从GCS加载模型
+    model_load_path = f"/gcs/{bucket_name}/{model_checkpoint}"
     model = MyAwesomeModel().to(DEVICE)
-    model.load_state_dict(torch.load(model_checkpoint))
+    model.load_state_dict(torch.load(model_load_path))
 
-    _, test_set = corrupt_mnist()
+    # 使用挂载的GCS路径
+    gcs_path = f"/gcs/{bucket_name}/data/corruptmnist"
+    _, test_set = corrupt_mnist(gcs_path)
+    
     test_dataloader = torch.utils.data.DataLoader(test_set, batch_size=32)
 
     model.eval()
@@ -91,10 +92,8 @@ def evaluate(model_checkpoint) -> None:
         total += target.size(0)
     print(f"Test accuracy: {correct / total}")
 
-
 cli.add_command(train)
 cli.add_command(evaluate)
-
 
 if __name__ == "__main__":
     cli()
