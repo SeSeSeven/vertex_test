@@ -1,7 +1,7 @@
 from typing import Tuple
-import matplotlib.pyplot as plt  # only needed for plotting
+import matplotlib.pyplot as plt
 import torch
-from mpl_toolkits.axes_grid1 import ImageGrid  # only needed for plotting
+from mpl_toolkits.axes_grid1 import ImageGrid
 import os
 
 def corrupt_mnist(data_path: str) -> Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset]:

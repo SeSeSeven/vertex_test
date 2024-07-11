@@ -8,3 +8,7 @@ steps:
 
 images:
   - 'gcr.io/dtumlops/mnist-training-image:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  logsBucket: gs://my-project-logs-bucket
