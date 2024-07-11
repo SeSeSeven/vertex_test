@@ -10,5 +10,4 @@ images:
   - 'gcr.io/dtumlops/mnist-training-image:$COMMIT_SHA'
 
 options:
-  logging: CLOUD_LOGGING_ONLY
-  logsBucket: gs://my-project-logs-bucket
+  logging: CLOUD_LOGGING_ONLY  # 或者您可以选择 NONE
